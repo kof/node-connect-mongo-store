@@ -6,7 +6,7 @@ QUnit.module('MongoStore', {
     setup: function() {
         stop()
         this.store = new MongoStore(MONGO_URL)
-        this.store.on('connect', start)
+        this.store.on('ready', start)
     },
     teardown: function() {
         stop()
@@ -108,7 +108,7 @@ test('cleanup', function() {
     stop()
     var store = new MongoStore(MONGO_URL, {cleanupInterval: 1000, ttl: 500})
 
-    store.on('connect', function() {
+    store.on('ready', function() {
         store.set('a', {a: 1}, function(err) {
             setTimeout(function() {
                 store.get('a', function(err, sess) {

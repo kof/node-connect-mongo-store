@@ -17,7 +17,7 @@ module.exports = function(connect) {
      *
      * @api public
      */
-    function MongoStore(uri, options) {
+    function MongoStore(uri, options, callback) {
         var self = this
 
         this.options = options || (options = {})
@@ -30,13 +30,12 @@ module.exports = function(connect) {
         // It's a Db instance.
         if (uri.collection) {
             this.db = uri
-            this._setup()
+            this._setup(callback)
         } else {
             MongoClient.connect(uri, options, function(err, db) {
                 if (err) return self.emit('error', err)
                 self.db = db
-                self._setup()
-                self.emit('connect', db)
+                self._setup(callback)
             })
         }
     }
@@ -44,29 +43,29 @@ module.exports = function(connect) {
     util.inherits(MongoStore, connect.session.Store)
 
     /**
-     * Attempt to fetch session by the given `sid`.
+     * Attempt to fetch session by the given `id`.
      *
-     * @param {String} sid
+     * @param {String} id
      * @param {Function} callback
      * @api public
      */
-    MongoStore.prototype.get = function(sid, callback) {
-        this.collection.findOne({sid: sid}, function(err, doc) {
+    MongoStore.prototype.get = function(id, callback) {
+        this.collection.findOne({id: id}, function(err, doc) {
             callback(err, doc ? doc.sess : null)
         })
     }
 
     /**
-     * Commit the given `sess` object associated with the given `sid`.
+     * Commit the given `sess` object associated with the given `id`.
      *
-     * @param {String} sid
+     * @param {String} id
      * @param {Session} sess
      * @param {Function} callback
      * @api public
      */
-    MongoStore.prototype.set = function(sid, sess, callback) {
+    MongoStore.prototype.set = function(id, sess, callback) {
         this.collection.update(
-            {sid: sid},
+            {id: id},
             {$set: {
                 sess: sess,
                 expires: Date.now() + this.options.ttl
@@ -77,13 +76,13 @@ module.exports = function(connect) {
     }
 
     /**
-     * Destroy the session associated with the given `sid`.
+     * Destroy the session associated with the given `id`.
      *
-     * @param {String} sid
+     * @param {String} id
      * @api public
      */
-    MongoStore.prototype.destroy = function(sid, callback) {
-        this.collection.remove({sid: sid}, callback)
+    MongoStore.prototype.destroy = function(id, callback) {
+        this.collection.remove({id: id}, callback)
     }
 
     /**
@@ -145,12 +144,21 @@ module.exports = function(connect) {
         function error(err) {
             if (err) self.emit('error', err)
         }
+
         this.db.on('error', error)
-        this.collection = this.db.collection(this.options.collectionName)
-        this.collection.ensureIndex({sid: 1}, {unique: true}, error)
-        setInterval(function() {
-            self.collection.remove({expires: {$lt: Date.now()}}, error)
-        }, this.options.cleanupInterval)
+        this.db.createCollection(
+            this.options.collectionName,
+            {autoIndexId: false},
+            function(err, collection) {
+                error(err)
+                self.collection = collection
+                collection.ensureIndex({id: 1}, {unique: true}, error)
+                setInterval(function() {
+                    collection.remove({expires: {$lt: Date.now()}}, error)
+                }, self.options.cleanupInterval)
+                self.emit('ready')
+            }
+        )
     }
 
     return MongoStore
