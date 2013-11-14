@@ -13,6 +13,15 @@ Yes, its yet another store, built because of frustration looking at the existing
     connect()
         .use(connect.session({store: mongoStore, secret: 'keyboard cat'}))
 
+    mongoStore.on('ready', function() {
+        console.log('Store is ready to use')
+    })
+
+    mongoStore.on('error', function(err) {
+        console.log('Do not ignore me', err)
+    })
+
+
 ## Options
 
 Options are directly passed to `MongoClient.connect`, so you can put any options for mongo here.

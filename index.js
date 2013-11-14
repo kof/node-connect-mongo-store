@@ -17,7 +17,7 @@ module.exports = function(connect) {
      *
      * @api public
      */
-    function MongoStore(uri, options, callback) {
+    function MongoStore(uri, options) {
         var self = this
 
         this.options = options || (options = {})
@@ -30,12 +30,12 @@ module.exports = function(connect) {
         // It's a Db instance.
         if (uri.collection) {
             this.db = uri
-            this._setup(callback)
+            this._setup()
         } else {
             MongoClient.connect(uri, options, function(err, db) {
                 if (err) return self.emit('error', err)
                 self.db = db
-                self._setup(callback)
+                self._setup()
             })
         }
     }
