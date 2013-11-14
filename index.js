@@ -21,9 +21,9 @@ module.exports = function(connect) {
         var self = this
 
         this.options = options || (options = {})
-        options.collectionName != null || (options.collectionName = 'sessions')
-        options.ttl != null || (options.ttl = oneDay)
-        options.cleanupInterval != null || (options.cleanupInterval = 60 * 1000)
+        options.collectionName || (options.collectionName = 'sessions')
+        options.ttl || (options.ttl = oneDay)
+        options.cleanupInterval || (options.cleanupInterval = 60 * 1000)
         options.server || (options.server = {})
         options.server.auto_reconnect != null || (options.server.auto_reconnect = true)
 
@@ -156,7 +156,7 @@ module.exports = function(connect) {
                 setInterval(function() {
                     collection.remove({expires: {$lt: Date.now()}}, error)
                 }, self.options.cleanupInterval)
-                self.emit('ready')
+                self.emit('connect')
             }
         )
     }

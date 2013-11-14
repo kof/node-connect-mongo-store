@@ -13,7 +13,7 @@ Yes, its yet another store, built because of frustration looking at the existing
     connect()
         .use(connect.session({store: mongoStore, secret: 'keyboard cat'}))
 
-    mongoStore.on('ready', function() {
+    mongoStore.on('connect', function() {
         console.log('Store is ready to use')
     })
 
