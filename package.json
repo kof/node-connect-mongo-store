@@ -1,0 +1,31 @@
+{
+    "name": "connect-mongo-store",
+    "description": "Connect session mongodb middlware store.",
+    "version": "0.1.1",
+    "author": {
+        "name": "Oleg Slobodskoi",
+        "email": "oleg008@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:kof/node-connect-mongo-store.git"
+    },
+    "keywords": ["connect", "session", "store", "middleware", "express", "mongo", "mongodb"],
+    "engines": {
+         "node": ">= 0.8.0"
+    },
+    "dependencies": {
+        "mongodb": "1.3.19"
+    },
+    "devDependencies": {
+        "connect": ">=2.0.0 < 3",
+        "qunit": "0.5.17"
+    },
+    "scripts": {},
+    "licenses": [
+        {
+           "type": "MIT",
+           "url": "http://www.opensource.org/licenses/mit-license.php"
+        }
+    ]
+}
