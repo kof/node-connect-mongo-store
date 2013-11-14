@@ -30,19 +30,13 @@ module.exports = function(connect) {
         // It's a Db instance.
         if (uri.collection) {
             this.db = uri
+            this._setup()
         } else {
             MongoClient.connect(uri, options, function(err, db) {
                 if (err) return self.emit('error', err)
                 self.db = db
-                self.collection = db.collection(options.collectionName)
+                self._setup()
                 self.emit('connect', db)
-                db.on('error', function(err) {
-                    self.emit('error', err)
-                })
-                self.collection.ensureIndex({sid: 1}, {unique:true}, function(err, result) {
-                    if (err) self.emit('error', err)
-                })
-                setInterval(self._cleanup.bind(self), options.cleanupInterval)
             })
         }
     }
@@ -140,6 +134,23 @@ module.exports = function(connect) {
         this.collection.remove({expires: {$lt: Date.now()}}, function(err) {
             if (err) self.emit('error', err)
         })
+    }
+
+    /**
+     * Setup collection, cleanup, error handler.
+     */
+    MongoStore.prototype._setup = function() {
+        var self = this
+
+        function error(err) {
+            if (err) self.emit('error', err)
+        }
+        this.db.on('error', error)
+        this.collection = this.db.collection(this.options.collectionName)
+        this.collection.ensureIndex({sid: 1}, {unique: true}, error)
+        setInterval(function() {
+            self.collection.remove({expires: {$lt: Date.now()}}, error)
+        }, this.options.cleanupInterval)
     }
 
     return MongoStore
