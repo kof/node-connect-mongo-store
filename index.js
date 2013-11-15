@@ -1,8 +1,6 @@
 var util = require('util'),
     MongoClient = require('mongodb').MongoClient
 
-var oneDay = 86400;
-
 /**
  * Return the `MongoStore` extending `connect`'s session Store.
  *
@@ -22,7 +20,9 @@ module.exports = function(connect) {
 
         this.options = options || (options = {})
         options.collectionName || (options.collectionName = 'sessions')
-        options.ttl || (options.ttl = oneDay)
+        // 1 day
+        options.ttl || (options.ttl = 24 * 60 * 60 * 1000)
+        // 60 s
         options.cleanupInterval || (options.cleanupInterval = 60 * 1000)
         options.server || (options.server = {})
         options.server.auto_reconnect != null || (options.server.auto_reconnect = true)
@@ -145,20 +145,21 @@ module.exports = function(connect) {
             if (err) self.emit('error', err)
         }
 
-        this.db.on('error', error)
-        this.db.createCollection(
-            this.options.collectionName,
-            {autoIndexId: false},
-            function(err, collection) {
-                error(err)
-                self.collection = collection
-                collection.ensureIndex({id: 1}, {unique: true}, error)
-                setInterval(function() {
-                    collection.remove({expires: {$lt: Date.now()}}, error)
-                }, self.options.cleanupInterval)
-                self.emit('connect')
-            }
-        )
+        this.db
+            .on('error', error)
+            .createCollection(
+                this.options.collectionName,
+                {autoIndexId: false},
+                function(err, collection) {
+                    if (err) return error(err)
+                    self.collection = collection
+                    collection.ensureIndex({id: 1}, {unique: true}, error)
+                    setInterval(function() {
+                        collection.remove({expires: {$lt: Date.now()}}, error)
+                    }, self.options.cleanupInterval)
+                    self.emit('connect')
+                }
+            )
     }
 
     return MongoStore
