@@ -27,13 +27,17 @@ module.exports = function(connect) {
         options.server || (options.server = {})
         options.server.auto_reconnect != null || (options.server.auto_reconnect = true)
 
+        this._error = function(err) {
+            if (err) self.emit('error', err)
+        }
+
         // It's a Db instance.
         if (uri.collection) {
             this.db = uri
             this._setup()
         } else {
             MongoClient.connect(uri, options, function(err, db) {
-                if (err) return self.emit('error', err)
+                if (err) return self._error(err)
                 self.db = db
                 self._setup()
             })
@@ -60,7 +64,7 @@ module.exports = function(connect) {
      *
      * @param {String} id
      * @param {Session} sess
-     * @param {Function} callback
+     * @param {Function} [callback]
      * @api public
      */
     MongoStore.prototype.set = function(id, sess, callback) {
@@ -71,7 +75,7 @@ module.exports = function(connect) {
                 expires: Date.now() + this.options.ttl
             }},
             {upsert: true},
-            callback
+            callback || this._error
         )
     }
 
@@ -79,10 +83,11 @@ module.exports = function(connect) {
      * Destroy the session associated with the given `id`.
      *
      * @param {String} id
+     * @param {Function} [callback]
      * @api public
      */
     MongoStore.prototype.destroy = function(id, callback) {
-        this.collection.remove({id: id}, callback)
+        this.collection.remove({id: id}, callback || this._error)
     }
 
     /**
@@ -105,11 +110,11 @@ module.exports = function(connect) {
     /**
      * Clear all sessions.
      *
-     * @param {Function} callback
+     * @param {Function} [callback]
      * @api public
      */
     MongoStore.prototype.clear = function(callback) {
-        this.collection.remove({}, callback)
+        this.collection.remove({}, callback || this._error)
     }
 
     /**
@@ -129,10 +134,7 @@ module.exports = function(connect) {
      * @api private
      */
     MongoStore.prototype._cleanup = function() {
-        var self = this
-        this.collection.remove({expires: {$lt: Date.now()}}, function(err) {
-            if (err) self.emit('error', err)
-        })
+        this.collection.remove({expires: {$lt: Date.now()}}, this._error)
     }
 
     /**
@@ -141,21 +143,17 @@ module.exports = function(connect) {
     MongoStore.prototype._setup = function() {
         var self = this
 
-        function error(err) {
-            if (err) self.emit('error', err)
-        }
-
         this.db
-            .on('error', error)
+            .on('error', this._error)
             .createCollection(
                 this.options.collectionName,
                 {autoIndexId: false},
                 function(err, collection) {
-                    if (err) return error(err)
+                    if (err) return self._error(err)
                     self.collection = collection
-                    collection.ensureIndex({id: 1}, {unique: true}, error)
+                    collection.ensureIndex({id: 1}, {unique: true}, self._error)
                     setInterval(function() {
-                        collection.remove({expires: {$lt: Date.now()}}, error)
+                        collection.remove({expires: {$lt: Date.now()}}, self._error)
                     }, self.options.cleanupInterval)
                     self.emit('connect')
                 }
