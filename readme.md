@@ -1,6 +1,8 @@
 ## Session store for connect using mongodb
 
 Yes, its yet another store, built because of frustration looking at the existing implementations.
+You can pass ANY options mongodb native driver can accept, it works in ANY setups, also with replica set.
+You can pass your existing Db instance instead of the uri. `new MongoStore(db)`
 
 ## Installation
     $ npm install connect-mongo-store
@@ -35,7 +37,3 @@ Options are directly passed to `MongoClient.connect`, so you can put any options
 - `collectionName` - name of collection used for sessions, default 'sessions'
 - `ttl` - time to live for a session, default 1 day
 - `cleanupInterval` - interval used to remove outdated sessions, default 60s
-
-## Reuse of existing Db instance
-
-You can pass your existing Db instance instead of the uri. `new MongoStore(db)`
