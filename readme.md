@@ -21,6 +21,12 @@ Yes, its yet another store, built because of frustration looking at the existing
         console.log('Do not ignore me', err)
     })
 
+Express users may do the following, since express.session.Store points to the connect.session.Store function:
+
+    var MongoStore = require('connect-mongo-store')(express)
+    express()
+        .use(express.session({store: mongoStore, secret: 'keyboard cat'}))
+
 
 ## Options
 
