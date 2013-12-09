@@ -1,5 +1,7 @@
 var util = require('util'),
-    MongoClient = require('mongodb').MongoClient
+    mongodb = require('mongodb'),
+    MongoClient = mongodb.MongoClient,
+    ObjectId = mongodb.ObjectID
 
 /**
  * Return the `MongoStore` extending `connect`'s session Store.
@@ -69,7 +71,7 @@ module.exports = function(connect) {
      */
     MongoStore.prototype.set = function(id, sess, callback) {
         this.collection.update(
-            {id: id},
+            {id: id, _id: ObjectId()},
             {$set: {
                 sess: sess,
                 expires: Date.now() + this.options.ttl
