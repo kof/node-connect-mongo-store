@@ -1,7 +1,5 @@
 var util = require('util'),
-    mongodb = require('mongodb'),
-    MongoClient = mongodb.MongoClient,
-    ObjectId = mongodb.ObjectID
+    MongoClient = require('mongodb').MongoClient;
 
 /**
  * Return the `MongoStore` extending `connect`'s session Store.
@@ -56,7 +54,7 @@ module.exports = function(connect) {
      * @api public
      */
     MongoStore.prototype.get = function(id, callback) {
-        this.collection.findOne({id: id}, function(err, doc) {
+        this.collection.findOne({_id: id}, function(err, doc) {
             callback(err, doc ? doc.sess : null)
         })
     }
@@ -71,7 +69,7 @@ module.exports = function(connect) {
      */
     MongoStore.prototype.set = function(id, sess, callback) {
         this.collection.update(
-            {id: id, _id: ObjectId()},
+            {_id: id},
             {$set: {
                 sess: sess,
                 expires: Date.now() + this.options.ttl
@@ -89,7 +87,7 @@ module.exports = function(connect) {
      * @api public
      */
     MongoStore.prototype.destroy = function(id, callback) {
-        this.collection.remove({id: id}, callback || this._error)
+        this.collection.remove({_id: id}, callback || this._error)
     }
 
     /**
@@ -149,11 +147,9 @@ module.exports = function(connect) {
             .on('error', this._error)
             .createCollection(
                 this.options.collectionName,
-                {autoIndexId: false},
                 function(err, collection) {
                     if (err) return self._error(err)
                     self.collection = collection
-                    collection.ensureIndex({id: 1}, {unique: true}, self._error)
                     setInterval(function() {
                         collection.remove({expires: {$lt: Date.now()}}, self._error)
                     }, self.options.cleanupInterval)
