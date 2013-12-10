@@ -128,16 +128,6 @@ module.exports = function(connect) {
     }
 
     /**
-     * Remove outdated sessions.
-     *
-     * @param {Function} callback
-     * @api private
-     */
-    MongoStore.prototype._cleanup = function() {
-        this.collection.remove({expires: {$lt: Date.now()}}, this._error)
-    }
-
-    /**
      * Setup collection, cleanup, error handler.
      */
     MongoStore.prototype._setup = function() {

@@ -1,7 +1,7 @@
 {
     "name": "connect-mongo-store",
     "description": "Connect session mongodb middlware store.",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "author": {
         "name": "Oleg Slobodskoi",
         "email": "oleg008@gmail.com"
